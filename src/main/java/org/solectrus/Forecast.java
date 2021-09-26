@@ -3,6 +3,10 @@ package org.solectrus;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.influxdb.annotations.Column;
 import com.influxdb.annotations.Measurement;
@@ -10,7 +14,7 @@ import com.influxdb.annotations.Measurement;
 @Measurement(name = "Forecast")
 public class Forecast {
 
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+    Set<DateTimeFormatter> formatters = Stream.of(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")).collect(Collectors.toCollection(HashSet::new)); 
     
     @Column(timestamp = true)
     private Instant time;
@@ -29,7 +33,18 @@ public class Forecast {
     }
     
     public void setTime(String time) {
-        this.time = ZonedDateTime.parse(time, formatter).toInstant();
+        
+        Exception ex = null;
+        for(DateTimeFormatter formatter : formatters) {
+            try {
+                this.time = ZonedDateTime.parse(time, formatter).toInstant();
+                return;
+            } catch (Exception e) {
+                ex = e;
+                continue;
+            }
+        }
+        throw new RuntimeException("Unable to parse DateTime", ex);
     }
     
     public int getWatt() {
