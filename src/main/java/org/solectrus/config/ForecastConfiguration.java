@@ -2,6 +2,7 @@ package org.solectrus.config;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -18,8 +19,10 @@ public class ForecastConfiguration {
 
     @Inject
     Logger logger;
+
+    public static final String FORECAST_SIMULATE_KEY = "forecast.%ssimulate";
     
-    private static final String DEFAULT_CONFIGURATION = "internal.default.configuration";
+    private static final String DEFAULT_CONFIGURATION = "default";
     
     private static final String LATITUDE_KEY = "forecast.%slatitude";
     private static final String LONGITUDE_KEY = "forecast.%slongitude";
@@ -78,13 +81,17 @@ public class ForecastConfiguration {
         return forecastConfigurationData.get(configurationName).getKwp();
     }
     
+    public String getSimulatedResponse(String configurationName) {
+        return config.getValue(String.format(FORECAST_SIMULATE_KEY, toKey(configurationName)), String.class);
+    }
+    
     private String toKey(String configurationName) {
         return (DEFAULT_CONFIGURATION.equals(configurationName)) ? "" : String.format("%s.", configurationName); 
     }
-    
+
     private class ForecastConfigurationData {
         
-        private String configurationName, latitude, longitude, declination, azimuth, kwp;
+        private String configurationName, latitude, longitude, declination, azimuth, kwp, simulatedResponse;
         
         public ForecastConfigurationData(String configurationName) {
             this.configurationName = configurationName;
@@ -130,6 +137,14 @@ public class ForecastConfiguration {
             this.kwp = kwp;
         }
         
+        public String getSimulatedResponse() {
+            return simulatedResponse;
+        }
+
+        public void setSimulatedResponse(String simulatedResponse) {
+            this.simulatedResponse = simulatedResponse;
+        }
+
         @Override
         public String toString() {
             StringBuffer sb = new StringBuffer();
